@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>Formulário de Compra</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">📝</span>
+      <h1>Formulário de Compra</h1>
+    </div>
+    <div class="top-actions">
+      <button class="btn ghost" onclick="window.location.href='index.html'">Voltar</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Formulário da empresa -->
+    <form id="form-empresa" class="form-container card">
+      <h2>Dados da Empresa</h2>
+      <input type="text" id="nome_empresa" placeholder="Nome da Empresa" required>
+      <input type="email" id="email" placeholder="E-mail" required>
+      <input type="text" id="telefone" placeholder="Telefone" 
+       required maxlength="15" oninput="mascaraTelefone(this)">
+      <input type="text" id="cpf" placeholder="CPF (opcional)" 
+       maxlength="14" oninput="mascaraCPF(this)">
+      <input type="text" id="cnpj" placeholder="CNPJ (opcional)" 
+       maxlength="18" oninput="mascaraCNPJ(this)">
+      <input type="text" id="endereco" placeholder="Endereço" required>
+
+      <h2>Participantes</h2>
+      <div id="participantes"></div>
+      <button type="button" class="btn" onclick="adicionarParticipante()">+ Adicionar Participante</button>
+      <p id="msg-participantes" class="subtle"></p>
+
+      <div class="compra">
+        <button type="submit" class="btn primary">Enviar Dados</button>
+      </div>
+    </form>
+
+    <!-- Seção do cupom -->
+    <div id="secao-cupom" style="display:none;" class="form-container card">
+      <h2>Cupom de Desconto</h2>
+      <div class="cupom-line">
+        <input type="text" id="cupom" placeholder="Digite seu cupom">
+        <button type="button" class="btn" onclick="validarCupom()">Validar</button>
+      </div>
+      <p id="msg-cupom" class="subtle"></p>
+    </div>
+
+    <!-- Botão do PagSeguro só aparece depois -->
+    <div id="pagamento" class="pagamento-container card" style="display:none;"></div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/formulario.js"></script>
+</body>
+</html>
