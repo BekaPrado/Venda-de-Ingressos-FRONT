@@ -72,6 +72,21 @@ textarea{min-height:120px;resize:vertical}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
 .modal-body{padding:16px}
 .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+/* ====== Modal centralizado e animado ====== */
+.modal-card {
+  margin: auto;                /* centraliza vertical/horizontal */
+  max-height: 90vh;            /* limita altura */
+  overflow-y: auto;            /* scroll interno se for muito alto */
+  transform: scale(0.95);      /* começa menor */
+  opacity: 0;                  /* começa invisível */
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+/* quando o modal abre */
+.modal[aria-hidden="false"] .modal-card {
+  transform: scale(1);
+  opacity: 1;
+}
 
 /* toasts */
 .toasts{position:fixed;bottom:18px;right:18px;display:grid;gap:10px;z-index:60}

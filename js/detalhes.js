@@ -25,8 +25,6 @@ async function carregarDetalhes() {
                 <img src="${evento.foto_url}" alt="${evento.nome}">
                 <h2>${evento.nome}</h2>
                 <p>${evento.descricao}</p>
-                <p><strong>Data:</strong> ${new Date(evento.data_evento).toLocaleDateString()}</p>
-                <p><strong>Horário:</strong> ${evento.horario_evento.substring(11,16)}</p>
                 <p><strong>Valor:</strong> R$ ${evento.valor}</p>
                 <div class="compra">
                     <button onclick="irParaFormulario(${evento.id})">Comprar</button>

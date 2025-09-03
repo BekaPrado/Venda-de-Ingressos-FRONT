@@ -14,7 +14,7 @@ async function carregarEvento() {
       // Mostra a regra na tela
       const msg = document.getElementById("msg-participantes");
       msg.textContent = `⚠️ Você deve adicionar pelo menos 1 e no máximo ${limiteParticipantes} participantes.`;
-      msg.style.color = "red";
+      msg.style.color = "blue";
     }
   } catch (err) {
     console.error("Erro ao carregar evento:", err);
