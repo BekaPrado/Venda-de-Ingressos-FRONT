@@ -20,7 +20,7 @@ async function carregarEventos() {
         card.innerHTML = `
             <img src="${evento.foto_url}" alt="${evento.nome}">
             <h3>${evento.nome}</h3>
-            <p><strong>R$ ${evento.valor}</strong></p>
+<p><strong>${Number(evento.valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</strong></p>
             <button onclick="irParaDetalhes(${evento.id})">Ver Detalhes</button>
         `;
 

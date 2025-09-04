@@ -29,6 +29,34 @@ function formatDateTime(isoDateTime) {
   // ex: 15/10/2025 19:30
 }
 
+function parseValorBRL(valorStr) {
+  if (!valorStr) return 0;
+
+  // Remove espaços
+  let v = valorStr.trim();
+
+  // Remove R$ e espaços
+  v = v.replace("R$", "").trim();
+
+  // Caso tenha ponto como separador de milhar e vírgula como decimal
+  if (/,\d{1,2}$/.test(v)) {
+    v = v.replace(/\./g, "").replace(",", ".");
+  } else {
+    // Caso só tenha vírgula (sem milhar)
+    v = v.replace(",", ".");
+  }
+
+  const num = parseFloat(v);
+  return isNaN(num) ? 0 : num;
+}
+
+function formatarMoeda(input) {
+  let valor = input.value.replace(/\D/g, ""); // só números
+  valor = (parseInt(valor, 10) / 100).toFixed(2) + "";
+  valor = valor.replace(".", ",");
+  valor = valor.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  input.value = valor;
+}
 
 const Toast = {
   show(msg, type = "success") {
@@ -92,16 +120,15 @@ const AdminUI = {
           </div>
           <div style="margin-top:14px" class="table-wrap">
             <table>
-              <thead><tr><th>ID</th><th>Nome</th><th>Ações</th></tr></thead>
+              <thead><th>Nome</th><th>Editar ou Excluir</th></tr></thead>
               <tbody>
                 ${categorias.length ? categorias.map(c => `
                   <tr>
-                    <td>${c.id}</td>
                     <td>${c.nome}</td>
                     <td style="width:260px">
                       <div style="display:flex;gap:8px">
                         <button class="btn ghost" data-act="edit" data-id="${c.id}" data-nome="${c.nome}">Editar</button>
-                        <button class="btn danger" data-act="del" data-id="${c.id}">Excluir</button>
+                        <button class="btn 4danger" data-act="del" data-id="${c.id}">Excluir</button>
                       </div>
                     </td>
                   </tr>
@@ -190,14 +217,13 @@ const AdminUI = {
 
           <div style="margin-top:14px" class="table-wrap">
             <table>
-              <thead><tr><th>ID</th><th>Nome</th><th>Data / Hora</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead>
+<thead><tr><th>Nome</th><th>Data</th><th>Valor</th><th>Status</th><th>Opções</th></tr></thead>
               <tbody>
                 ${eventos.length ? eventos.map(ev => `
                   <tr>
-                    <td>${ev.id}</td>
                     <td>${ev.nome}</td>
-<td>${formatDate(ev.data_evento || ev.data)} ${formatTime(ev.horario_evento)}</td>
-                    <td>R$ ${Number(ev.valor || 0).toFixed(2)}</td>
+                    <td>${formatDate(ev.data_evento || ev.data)}</td>
+                    <td>${Number(ev.valor || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</td>
                     <td>${ev.status ? (ev.status === "ativo" ? `<span class="badge success">ativo</span>` : `<span class="badge">${ev.status}</span>`) : "-"}</td>
                     <td style="width:420px">
                       <div style="display:flex;flex-wrap:wrap;gap:8px">
@@ -205,7 +231,6 @@ const AdminUI = {
                         <button class="btn warn" data-act="cancel" data-id="${ev.id}">Cancelar</button>
                         <button class="btn danger" data-act="del" data-id="${ev.id}">Excluir</button>
                         <button class="btn" data-act="cupons" data-id="${ev.id}">Cupons</button>
-                        <button class="btn ghost" data-act="forms" data-id="${ev.id}">Formulários</button>
                       </div>
                     </td>
                   </tr>
@@ -232,7 +257,7 @@ const AdminUI = {
           else Toast.show(res.message || "Erro ao cancelar.", "error");
           this.showEventos();
         } else if (act === "del") {
-          if (!confirm("Excluir (lógico) o evento?")) return;
+          if (!confirm("Excluir o evento?")) return;
           const res = await apiDelete(`/evento/${id}`);
           if (isOk(res)) Toast.show("Evento excluído.");
           else Toast.show(res.message || "Erro ao excluir.", "error");
@@ -257,9 +282,12 @@ const AdminUI = {
           <label>Nome <input id="ev_nome" name="nome" required value="${prefill?.nome || ""}"></label>
           <label>Categoria <input id="ev_categoria" name="categoria_id" type="number" required value="${prefill?.categoria_id || ""}"></label>
         </div>
-        <label>Descrição <textarea id="ev_descricao" name="descricao">${prefill?.descricao || ""}</textarea></label>
+<label>Descrição 
+  <textarea id="ev_descricao" name="descricao">${prefill?.descricao || ""}</textarea>
+</label>
+
         <div class="form-3">
-          <label>Valor (R$) <input id="ev_valor" name="valor" type="number" step="0.01" required value="${prefill?.valor || ""}"></label>
+<label>Valor (R$) <input id="ev_valor" name="valor" type="text" required value="${prefill ? Number(prefill.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : ""}" oninput="formatarMoeda(this)"></label>
           <label>Data <input id="ev_data" name="data_evento" type="date" required value="${prefill?.data_evento || ""}"></label>
           <label>Horário <input id="ev_hora" name="horario_evento" type="time" required value="${prefill?.horario_evento ? String(prefill.horario_evento).slice(0,5) : ""}"></label>
         </div>
@@ -280,36 +308,62 @@ const AdminUI = {
       <button class="btn ghost" type="button" id="btnCancelEvento">Cancelar</button>
       <button class="btn" id="btnSalvarEvento">Salvar</button>
     `);
+    // Inicializar CKEditor no campo de descrição
+setTimeout(() => {
+  const el = document.querySelector('#ev_descricao');
+  if (el && window.ClassicEditor) {
+    ClassicEditor.create(el, {
+      toolbar: {
+        items: [
+          'heading', '|',
+          'bold', 'italic', 'underline', 'link', '|',
+          'bulletedList', 'numberedList', '|',
+          'alignment', 'fontColor', 'fontBackgroundColor',
+          '|', 'undo', 'redo'
+        ]
+      }
+    }).then(editor => {
+      window.editorDescricao = editor;
+    }).catch(err => console.error(err));
+  }
+}, 200);
+
 
     document.getElementById("btnCancelEvento").addEventListener("click", () => Modal.close());
     document.getElementById("btnSalvarEvento").addEventListener("click", async () => {
-      const ev = {
-        nome: document.getElementById("ev_nome").value,
-        descricao: document.getElementById("ev_descricao").value,
-        valor: parseFloat(document.getElementById("ev_valor").value || 0),
-        foto_url: document.getElementById("ev_foto").value,
-        categoria_id: parseInt(document.getElementById("ev_categoria").value || 0),
-        data_evento: document.getElementById("ev_data").value,
-        horario_evento: document.getElementById("ev_hora").value,
-        limite_participantes: parseInt(document.getElementById("ev_limite").value || 1),
-        botao_pagseguro: document.getElementById("ev_botao").value,
-        status: document.getElementById("ev_status").value
-      };
+  const valorInput = document.getElementById("ev_valor").value;
 
-      try {
-        const res = prefill?.id ? await apiPut(`/evento/${prefill.id}`, ev) : await apiPost("/evento", ev);
-        Modal.close();
-        if (isOk(res)) {
-          Toast.show("Evento salvo.");
-          this.showEventos();
-        } else {
-          Toast.show(res.message || "Erro ao salvar evento.", "error");
-        }
-      } catch (err) {
-        console.error(err);
-        Toast.show("Erro ao salvar evento.", "error");
-      }
-    });
+const ev = {
+  nome: document.getElementById("ev_nome").value,
+descricao: window.editorDescricao ? window.editorDescricao.getData() : document.getElementById("ev_descricao").value,
+  valor: parseValorBRL(valorInput), // <-- continua usando a função já existente
+  foto_url: document.getElementById("ev_foto").value,
+  categoria_id: parseInt(document.getElementById("ev_categoria").value || 0),
+  data_evento: document.getElementById("ev_data").value,
+  horario_evento: document.getElementById("ev_hora").value,
+  limite_participantes: parseInt(document.getElementById("ev_limite").value || 1),
+  botao_pagseguro: document.getElementById("ev_botao").value,
+  status: document.getElementById("ev_status").value
+};
+
+  try {
+    const res = prefill?.id
+      ? await apiPut(`/evento/${prefill.id}`, ev)
+      : await apiPost("/evento", ev);
+
+    Modal.close();
+    if (isOk(res)) {
+      Toast.show("Evento salvo.");
+      this.showEventos();
+    } else {
+      Toast.show(res.message || "Erro ao salvar evento.", "error");
+    }
+  } catch (err) {
+    console.error(err);
+    Toast.show("Erro ao salvar evento.", "error");
+  }
+});
+
   },
 
   async editEvento(id) {
@@ -327,164 +381,118 @@ const AdminUI = {
   /* ---------------- Compras / Formulários ---------------- */
     /* ---------------- Compras / Formulários ---------------- */
   async showCompras() {
-    setActive("btnCompras");
-    try {
-      const r = await apiGet("/evento");
-      const eventos = r.eventos || r.dados || [];
-      const main = document.getElementById("conteudo");
+  setActive("btnCompras");
+  try {
+    const r = await apiGet("/evento");
+    const eventos = r.eventos || r.dados || [];
+    const main = document.getElementById("conteudo");
 
-      main.innerHTML = `
-        <section class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <h2>Compras / Formulários</h2>
-              <p class="subtle">Veja empresas que compraram e seus participantes</p>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <select id="selEventoCompras">
-                <option value="">Todos os eventos</option>
-                ${eventos.map(ev => `<option value="${ev.id}">${ev.id} — ${ev.nome}</option>`).join("")}
-              </select>
-            </div>
+    main.innerHTML = `
+      <section class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <h2>Compras / Formulários</h2>
+            <p class="subtle">Veja empresas que compraram e seus participantes</p>
           </div>
-
-          <div id="wrapEmpresas" style="margin-top:12px" class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>ID</th><th>Empresa</th><th>Evento</th><th>Criado em</th><th>Ações</th></tr>
-              </thead>
-              <tbody id="tbodyEmpresas"></tbody>
-            </table>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="selEventoCompras">
+              <option value="">Todos os eventos</option>
+              ${eventos.map(ev => `<option value="${ev.id}">${ev.nome}</option>`).join("")}
+            </select>
           </div>
-        </section>
-      `;
+        </div>
 
-      const tbody = document.getElementById("tbodyEmpresas");
+        <div id="wrapEmpresas" style="margin-top:12px" class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Empresa</th><th>Evento</th><th>Ver Participantes</th></tr>
+            </thead>
+            <tbody id="tbodyEmpresas"></tbody>
+          </table>
+        </div>
+      </section>
+    `;
 
-      const carregarEmpresas = async (eventoId = "") => {
-        try {
-          let empresas = [];
-          if (eventoId) {
-            // só de 1 evento
-            const re = await apiGet(`/empresa/evento/${eventoId}`);
-            empresas = re.empresas || re.dados || [];
-            empresas.forEach(em => em.evento_nome = eventos.find(e => e.id == eventoId)?.nome || "");
-          } else {
-            // todos os eventos
-            for (let ev of eventos) {
-              const re = await apiGet(`/empresa/evento/${ev.id}`);
-              const emps = re.empresas || re.dados || [];
-              emps.forEach(em => em.evento_nome = ev.nome);
-              empresas = empresas.concat(emps);
-            }
+    const tbody = document.getElementById("tbodyEmpresas");
+
+    const carregarEmpresas = async (eventoId = "") => {
+      try {
+        let empresas = [];
+        if (eventoId) {
+          const re = await apiGet(`/empresa/evento/${eventoId}`);
+          empresas = re.empresas || re.dados || [];
+          empresas.forEach(em => em.evento_nome = eventos.find(e => e.id == eventoId)?.nome || "");
+        } else {
+          for (let ev of eventos) {
+            const re = await apiGet(`/empresa/evento/${ev.id}`);
+            const emps = re.empresas || re.dados || [];
+            emps.forEach(em => em.evento_nome = ev.nome);
+            empresas = empresas.concat(emps);
           }
-
-          tbody.innerHTML = empresas.length ? empresas.map(em => `
-            <tr>
-              <td>${em.id}</td>
-              <td>
-                <strong>${em.nome_empresa}</strong>
-                <div class="subtle">${em.email} • ${em.telefone || "—"}</div>
-                <div class="subtle">CPF: ${em.cpf || "—"} • CNPJ: ${em.cnpj || "—"}</div>
-              </td>
-              <td>${em.evento_nome || "—"}</td>
-<td>${formatDateTime(em.criado_em)}</td>
-<td>
-  <button class="btn ghost" 
-          data-act="ver-parts" 
-          data-id="${em.id}" 
-          data-nome="${String(em.nome_empresa).replace(/"/g, '&quot;')}">
-    Participantes
-  </button>
-</td>
-            </tr>
-          `).join("") : `<tr><td colspan="5">Nenhuma compra encontrada.</td></tr>`;
-
-        } catch (err) {
-          console.error(err);
-          Toast.show("Erro ao carregar empresas.", "error");
         }
-      };
 
-      // carregar todas logo ao abrir
-      carregarEmpresas();
+        tbody.innerHTML = empresas.length ? empresas.map(em => `
+          <tr>
+            <td>
+              <strong>${em.nome_empresa}</strong>
+              <div class="subtle">${em.email} • ${em.telefone || "—"}</div>
+              <div class="subtle">CPF: ${em.cpf || "—"} • CNPJ: ${em.cnpj || "—"}</div>
+            </td>
+            <td>${em.evento_nome || "—"}</td>
+            <td>
+              <button class="btn ghost" 
+                      data-act="ver-parts" 
+                      data-id="${em.id}" 
+                      data-nome="${String(em.nome_empresa).replace(/"/g, '&quot;')}">
+                Participantes
+              </button>
+            </td>
+          </tr>
+        `).join("") : `<tr><td colspan="3">Nenhuma compra encontrada.</td></tr>`;
 
-      // filtro de evento (sem botão, dispara no change)
-      document.getElementById("selEventoCompras").addEventListener("change", (e) => {
-        carregarEmpresas(e.target.value);
-      });
-
-      // delegação para ver participantes
-      tbody.addEventListener("click", async (e) => {
-        const btn = e.target.closest("button");
-        if (!btn) return;
-        if (btn.dataset.act === "ver-parts") {
-  this.verParticipantes(btn.dataset.id, btn.dataset.nome);
-}
-
-      });
-
-    } catch (err) {
-      console.error(err);
-      Toast.show("Erro ao buscar eventos.", "error");
-    }
-  },
-
-
-  async showFormularios(eventoId) {
-    // compat: abre a lista de empresas para um evento direto na tela (modo alternativo)
-    setActive(null);
-    try {
-      const r = await apiGet(`/empresa/evento/${eventoId}`);
-      const empresas = r.empresas || r.dados || [];
-      const main = document.getElementById("conteudo");
-      if (empresas.length === 0) {
-        main.innerHTML = `<h2>Formulários do Evento</h2><p>Nenhum formulário encontrado.</p>`;
-        return;
+      } catch (err) {
+        console.error(err);
+        Toast.show("Erro ao carregar empresas.", "error");
       }
-      main.innerHTML = `
-        <h2>Formulários do Evento</h2>
-        <ul>
-          ${empresas.map(emp => `
-            <li>
-              <strong>${emp.nome_empresa}</strong> - ${emp.email}
-<button class="btn" data-act="ver-participantes" data-empresa="${emp.id}" data-nome="${emp.nome_empresa}">Ver Participantes</button>
-            </li>
-          `).join("")}
-        </ul>
-      `;
+    };
 
-      const mainEl = document.getElementById("conteudo");
-      mainEl.addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (btn?.dataset.act === "ver-participantes") {
-  this.verParticipantes(btn.dataset.empresa, btn.dataset.nome);
-}
+    carregarEmpresas();
 
-      });
-    } catch (err) {
-      console.error(err);
-      Toast.show("Erro ao buscar formulários.", "error");
-    }
-  },
+    document.getElementById("selEventoCompras").addEventListener("change", (e) => {
+      carregarEmpresas(e.target.value);
+    });
 
-  async verParticipantes(empresaId, nomeEmpresa = "") {
+    tbody.addEventListener("click", async (e) => {
+      const btn = e.target.closest("button");
+      if (!btn) return;
+      if (btn.dataset.act === "ver-parts") {
+        this.verParticipantes(btn.dataset.id, btn.dataset.nome);
+      }
+    });
+
+  } catch (err) {
+    console.error(err);
+    Toast.show("Erro ao buscar eventos.", "error");
+  }
+},
+
+
+async verParticipantes(empresaId, nomeEmpresa = "") {
   try {
     const r = await apiGet(`/participante/empresa/${empresaId}`);
     const participantes = r.participantes || r.dados || [];
-    Modal.open(`Participantes — ${nomeEmpresa || "Empresa #" + empresaId}`, `
+    Modal.open(`Participantes — ${nomeEmpresa || "Empresa"}`, `
       <div class="table-wrap">
         <table>
-          <thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th></tr></thead>
+          <thead><tr><th>Nome</th><th>Email</th><th>Telefone</th></tr></thead>
           <tbody>
             ${participantes.length ? participantes.map(p => `
               <tr>
-                <td>${p.id}</td>
                 <td>${p.nome}</td>
                 <td>${p.email || "—"}</td>
                 <td>${p.telefone || "—"}</td>
               </tr>
-            `).join("") : `<tr><td colspan="4">Nenhum participante.</td></tr>`}
+            `).join("") : `<tr><td colspan="3">Nenhum participante.</td></tr>`}
           </tbody>
         </table>
       </div>
@@ -494,6 +502,7 @@ const AdminUI = {
     Toast.show("Erro ao carregar participantes.", "error");
   }
 }
+
 ,
     /* ---------------- Cupons ---------------- */
   async showCupons(eventoId) {

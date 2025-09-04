@@ -43,14 +43,14 @@ function adicionarParticipante() {
 
 // Máscaras para inputs
 function mascaraCPF(input) {
-  input.value = input.value.replace(/\D/g, "").slice(0, 11) // garante máximo de 11 números
+  input.value = input.value.replace(/\D/g, "").slice(0, 11)
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
 }
 
 function mascaraCNPJ(input) {
-  input.value = input.value.replace(/\D/g, "").slice(0, 14) // máximo 14 números
+  input.value = input.value.replace(/\D/g, "").slice(0, 14)
     .replace(/(\d{2})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1.$2")
     .replace(/(\d{3})(\d)/, "$1/$2")
@@ -58,11 +58,10 @@ function mascaraCNPJ(input) {
 }
 
 function mascaraTelefone(input) {
-  input.value = input.value.replace(/\D/g, "").slice(0, 11) // máximo 11 dígitos (com DDD)
+  input.value = input.value.replace(/\D/g, "").slice(0, 11)
     .replace(/^(\d{2})(\d)/g, "($1) $2")
     .replace(/(\d{4,5})(\d{4})$/, "$1-$2");
 }
-
 
 // Validações de campos da empresa
 function validarEmpresa(empresa) {
@@ -71,19 +70,16 @@ function validarEmpresa(empresa) {
     return false;
   }
 
-  // Telefone: só números (mínimo 8 dígitos)
   if (empresa.telefone && !/^\d{8,15}$/.test(empresa.telefone.replace(/\D/g, ""))) {
     alert("⚠️ Telefone inválido. Digite entre 8 e 15 números.");
     return false;
   }
 
-  // CPF: 11 dígitos
   if (empresa.cpf && !/^\d{11}$/.test(empresa.cpf.replace(/\D/g, ""))) {
     alert("⚠️ CPF inválido. Digite 11 números.");
     return false;
   }
 
-  // CNPJ: 14 dígitos
   if (empresa.cnpj && !/^\d{14}$/.test(empresa.cnpj.replace(/\D/g, ""))) {
     alert("⚠️ CNPJ inválido. Digite 14 números.");
     return false;
@@ -111,7 +107,6 @@ document.getElementById("form-empresa").addEventListener("submit", async (e) => 
 
   if (!validarEmpresa(empresa)) return;
 
-  // Valida número de participantes
   const participantes = document.querySelectorAll(".participante-item");
   if (participantes.length < 1) {
     alert("⚠️ Adicione pelo menos 1 participante.");
@@ -128,7 +123,6 @@ document.getElementById("form-empresa").addEventListener("submit", async (e) => 
     if (data.status) {
       empresaId = data.dados?.id || data.empresa?.id;
 
-      // Salvar participantes
       for (let p of participantes) {
         const participante = {
           nome: p.querySelector(".nome-participante").value.trim(),
@@ -147,26 +141,27 @@ document.getElementById("form-empresa").addEventListener("submit", async (e) => 
 
       alert("✅ Dados enviados com sucesso!");
 
-      // Desabilita formulário mas mantém visível
       document.querySelectorAll("#form-empresa input, #form-empresa button").forEach(el => {
         el.disabled = true;
       });
 
-      // Mostra cupom + pagamento na mesma página
       document.getElementById("secao-cupom").style.display = "block";
       document.getElementById("pagamento").style.display = "block";
 
-      // Buscar evento para renderizar botão normal
       const eventoRes = await apiGet(`/evento/${eventoId}`);
       const eventoData = eventoRes.evento || eventoRes.dados;
 
       if (eventoData) {
         document.getElementById("pagamento").innerHTML = `
-          <h3>Comprar com cupom</h3>
-          <div id="botaoCupom"></div>
+          <div id="wrapNormalBtn">
+            <h3>Comprar sem cupom</h3>
+            <div id="botaoNormal">${eventoData.botao_pagseguro}</div>
+          </div>
 
-          <h3>Comprar sem cupom</h3>
-          <div id="botaoNormal">${eventoData.botao_pagseguro}</div>
+          <div id="wrapCupomBtn" style="display:none; margin-top:1.5rem;">
+            <h3>Comprar com cupom</h3>
+            <div id="botaoCupom"></div>
+          </div>
         `;
       }
     } else {
@@ -191,11 +186,16 @@ async function validarCupom() {
       msg.textContent = `✅ Cupom válido! Desconto aplicado: ${cupomAplicado.desconto} (${cupomAplicado.tipo})`;
       msg.style.color = "green";
 
+      document.getElementById("wrapNormalBtn").style.display = "none";
       document.getElementById("botaoCupom").innerHTML = cupomAplicado.botao_pagseguro_html;
+      document.getElementById("wrapCupomBtn").style.display = "block";
     } else {
       cupomAplicado = null;
       msg.textContent = "❌ Cupom inválido.";
       msg.style.color = "red";
+
+      document.getElementById("wrapNormalBtn").style.display = "block";
+      document.getElementById("wrapCupomBtn").style.display = "none";
       document.getElementById("botaoCupom").innerHTML = "";
     }
   } catch (error) {

@@ -21,16 +21,19 @@ async function carregarDetalhes() {
         const evento = data.evento;
 
         document.getElementById("detalhes-evento").innerHTML = `
-            <div class="detalhe-card">
-                <img src="${evento.foto_url}" alt="${evento.nome}">
-                <h2>${evento.nome}</h2>
-                <p>${evento.descricao}</p>
-                <p><strong>Valor:</strong> R$ ${evento.valor}</p>
-                <div class="compra">
-                    <button onclick="irParaFormulario(${evento.id})">Comprar</button>
-                </div>
-            </div>
-        `;
+    <div class="detalhe-card">
+        <img src="${evento.foto_url}" alt="${evento.nome}">
+        <h2>${evento.nome}</h2>
+        <div class="descricao-evento">
+            ${evento.descricao || ""}
+        </div>
+        <p><strong>Valor:</strong> ${Number(evento.valor).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</p>
+        <div class="compra">
+            <button onclick="irParaFormulario(${evento.id})">Comprar</button>
+        </div>
+    </div>
+`;
+
     } catch (err) {
         console.error("Erro ao carregar evento:", err);
         document.getElementById("detalhes-evento").innerHTML = "<p>Erro ao carregar detalhes do evento.</p>";

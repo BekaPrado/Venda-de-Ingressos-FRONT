@@ -73,13 +73,56 @@ textarea{min-height:120px;resize:vertical}
 .modal-body{padding:16px}
 .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
 /* ====== Modal centralizado e animado ====== */
+/* ===== Ajustes no modal para CKEditor funcionar ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1, 6, 12, 0.6);
+  z-index: 9999;               /* sempre por cima */
+  pointer-events: none;        /* bloqueia clique enquanto fechado */
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.modal[aria-hidden="false"] {
+  display: flex !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
 .modal-card {
-  margin: auto;                /* centraliza vertical/horizontal */
-  max-height: 90vh;            /* limita altura */
-  overflow-y: auto;            /* scroll interno se for muito alto */
-  transform: scale(0.95);      /* começa menor */
-  opacity: 0;                  /* começa invisível */
+  width: min(1000px, 94vw);
+  background: linear-gradient(180deg, #071425, #061220);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.95);
+  opacity: 0;
   transition: transform 0.25s ease, opacity 0.25s ease;
+  z-index: 10000;              /* acima do overlay */
+}
+
+.modal[aria-hidden="false"] .modal-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* CKEditor dentro do modal */
+.ck-editor {
+  width: 100%;
+}
+.ck-editor__editable {
+  min-height: 200px;
+  padding: 10px;
+  background: #fff;   /* fundo branco para editar melhor */
+  color: #000;        /* texto preto dentro do editor */
 }
 
 /* quando o modal abre */
@@ -106,3 +149,71 @@ textarea{min-height:120px;resize:vertical}
   .sidebar{position:static;height:auto;border-right:none}
   .form-2,.form-3{grid-template-columns:1fr}
 }
+
+/* ===== CKEditor + modal fixes ===== */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(1, 6, 12, 0.6);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+/* Quando aberto, fica clicável */
+.modal[aria-hidden="false"] {
+  display: flex !important;
+  pointer-events: auto !important;
+  opacity: 1 !important;
+}
+
+/* Card do modal */
+.modal-card {
+  width: min(1000px, 94vw);
+  background: linear-gradient(180deg, #071425, #061220);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  transform: scale(0.98);
+  opacity: 0;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+  z-index: 10000;
+}
+
+.modal[aria-hidden="false"] .modal-card {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* força que o conteúdo do modal receba cliques (evita overlays invisíveis) */
+.modal * { pointer-events: auto; }
+
+/* CKEditor: garante área editável com fundo claro e texto escuro para melhor usabilidade */
+.ck-editor {
+  width: 100%;
+  z-index: 11000; /* garante que o editor fique acima de outros elementos */
+}
+.ck-editor__editable {
+  min-height: 220px;
+  padding: 12px;
+  background: #fff !important;
+  color: #000 !important;
+  caret-color: #000 !important;
+  outline: none;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Toolbar do CKEditor visível por cima */
+.ck.ck-toolbar { z-index: 12000 !important; }
+
+/* pequenas proteções: se algo aplicar pointer-events:none */
+.ck, .ck * { pointer-events: auto !important; }

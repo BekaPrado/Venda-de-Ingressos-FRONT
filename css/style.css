@@ -254,3 +254,33 @@ button:hover {
 .active, .dot:hover {
   background-color: var(--primary);
 }
+.pagamento-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;  /* centraliza na horizontal */
+  justify-content: center; /* centraliza na vertical (se precisar) */
+  text-align: center;
+  gap: 1rem; /* espaçamento entre os blocos */
+}
+
+.pagamento-container h3 {
+  margin-bottom: 0.5rem;
+}
+
+.descricao-evento {
+  margin: 1rem 0;
+  line-height: 1.6;
+}
+
+.descricao-evento h1,
+.descricao-evento h2,
+.descricao-evento h3 {
+  margin-top: 1rem;
+  color: #333;
+}
+
+.descricao-evento ul, .descricao-evento ol {
+  margin-left: 1.5rem;
+  padding-left: 1rem;
+}
+
