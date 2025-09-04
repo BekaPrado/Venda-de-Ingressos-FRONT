@@ -23,7 +23,7 @@ body{
   font: 500 15px/1.6 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
-/* Topbar */
+/* ----------- */
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(8,12,20,.5);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:20}
 .brand{display:flex;align-items:center;gap:12px}
 .brand .logo{font-size:22px}
@@ -39,11 +39,11 @@ body{
 
 .content{padding:22px;display:grid;gap:18px}
 
-/* Card */
+/*cards */
 .card{background:linear-gradient(180deg,#071229,#081426);border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
 .card h2{margin:0;font-size:18px}
 
-/* Buttons */
+/* button */
 .btn{background:var(--primary);color:#012426;border:none;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
 .btn:hover{background:var(--primary-strong)}
 .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--border)}
@@ -51,14 +51,14 @@ body{
 .btn.warn{background:var(--warning);color:#2b1500}
 .icon-btn{background:transparent;border:1px solid var(--border);padding:8px;border-radius:8px;color:var(--text);cursor:pointer}
 
-/* table */
+/*  */
 .table-wrap{overflow:auto;border-radius:10px;border:1px solid var(--border)}
 table{width:100%;border-collapse:collapse;background:transparent}
 th,td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.02);text-align:left}
 th{background:#071428;color:#cfeaf0;position:sticky;top:0}
 tr:hover td{background:rgba(255,255,255,.01)}
 
-/* forms */
+/* formulario */
 input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text)}
 textarea{min-height:120px;resize:vertical}
 .form-grid{display:grid;gap:12px}
@@ -72,8 +72,7 @@ textarea{min-height:120px;resize:vertical}
 .modal-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
 .modal-body{padding:16px}
 .modal-footer{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
-/* ====== Modal centralizado e animado ====== */
-/* ===== Ajustes no modal para CKEditor funcionar ===== */
+/*  CKEDITOR *não funciona* */
 .modal {
   position: fixed;
   inset: 0;
@@ -193,7 +192,7 @@ textarea{min-height:120px;resize:vertical}
   opacity: 1;
 }
 
-/* força que o conteúdo do modal receba cliques (evita overlays invisíveis) */
+/* força que o conteúdo do modal receba cliques (evita o overlays invisíveis) */
 .modal * { pointer-events: auto; }
 
 /* CKEditor: garante área editável com fundo claro e texto escuro para melhor usabilidade */
